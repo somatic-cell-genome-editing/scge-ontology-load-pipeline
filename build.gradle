@@ -1,0 +1,74 @@
+// create a runnable jar with jar dependencies stored in lib subdirectory
+tasks.whenTaskAdded { task ->
+    ['startScripts', 'distTar'].each { String skipTaskName ->
+        if (task.name.contains(skipTaskName)) {
+            task.enabled = false
+        }
+    }
+}
+apply plugin: 'java'
+apply plugin: 'application'
+
+// JDK 8
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+mainClassName = 'edu.mcw.scge.dataload.ontologies.Manager'
+String myAppName = 'OntologyLoad'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'commons-collections:commons-collections:3.2.2'
+    compile 'org.apache.commons:commons-dbcp2:2.7.0'
+    compile 'commons-net:commons-net:3.6'
+    compile 'log4j:log4j:1.2.17'
+    compile 'org.apache.httpcomponents:httpclient:4.5.12'
+    compile 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
+    compile 'org.springframework:spring-beans:5.2.7.RELEASE'
+    compile 'org.springframework:spring-jdbc:5.2.7.RELEASE'
+    compile 'com.io7m.xom:xom:1.2.10'
+
+    compile fileTree(dir: 'lib', include: '*.jar')
+// https://mvnrepository.com/artifact/org.biojava/biojava
+    compile group: 'org.biojava', name: 'biojava', version: '5.4.0', ext: 'pom'
+// https://mvnrepository.com/artifact/org.biojava/biojava-ontology
+    compile group: 'org.biojava', name: 'biojava-ontology', version: '5.4.0'
+// https://mvnrepository.com/artifact/commons-dbcp/commons-dbcp
+    compile group: 'commons-dbcp', name: 'commons-dbcp', version: '1.2.2'
+    // https://mvnrepository.com/artifact/postgresql/postgresql
+    compile group: 'postgresql', name: 'postgresql', version: '9.1-901-1.jdbc4'
+}
+
+jar {
+    baseName = myAppName
+    manifest {
+        attributes(
+            'Built-By': System.getProperty('user.name'),
+            'Built-Date': new Date(),
+            'Built-JDK': System.getProperty('java.version'),
+            'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+            'Main-Class': mainClassName
+        )
+    }
+}
+
+distributions {
+    main {
+        baseName = myAppName
+    }
+}
+task update_scgecore(type:Copy){
+    from file("C:\\git\\scge-core\\build\\libs\\scge-core-1.0.jar")
+    into file("lib/")
+
+}
+task createDistro(type: Copy) {
+    def zipFile = file('build/distributions/'+myAppName+'.zip')
+    def outputDir = file("build/install")
+
+    from zipTree(zipFile)
+    into outputDir
+}
+createDistro.dependsOn assembleDist
