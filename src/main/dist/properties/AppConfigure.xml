@@ -39,10 +39,7 @@
                 <entry key="CHEBI" value="ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi.obo"/>
                 <entry key="VT" value="http://data.bioontology.org/ontologies/VT/download/?apikey=8b5b7825-538d-40e0-9e9e-5ab9274a9aeb" />
                 <entry key="ORDO" value="http://data.bioontology.org/ontologies/ORDO_OBO/download/?apikey=8b5b7825-538d-40e0-9e9e-5ab9274a9aeb" />
-                <entry key="UBERON" value="http://ontologies.berkeleybop.org/uberon/basic.obo"/>
-
-                <!--<entry key="DO" value="http://ontologies.berkeleybop.org/doid/doid.obo" />-->
-                <!--<entry key="DO" value="https://raw.githubusercontent.com/DiseaseOntology/HumanDiseaseOntology/master/src/ontology/doid.obo" />-->
+                <entry key="UBERON" value="http://purl.obolibrary.org/obo/uberon/basic.obo"/>
 
                 <entry key="EFO" value="https://www.ebi.ac.uk/efo/efo.obo"/>
                 <entry key="MI" value="http://ontologies.berkeleybop.org/mi/mi.obo"/>
