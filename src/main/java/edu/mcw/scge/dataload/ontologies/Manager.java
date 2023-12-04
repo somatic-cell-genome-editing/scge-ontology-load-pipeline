@@ -100,6 +100,7 @@ public class Manager {
 
         if( checkForCycles ) {
             manager.dao.checkForCycles(singleOntologyId);
+            System.exit(0);
         }
 
         FileParser parser = null;

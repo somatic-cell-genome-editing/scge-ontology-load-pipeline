@@ -300,7 +300,8 @@ public class OntologyDAO {
      */
     public int getDescendantCount(String termAcc) throws Exception {
 
-        return dao.getCountOfDescendants(termAcc);
+        List<String> descendantAccIds = getAllActiveTermDescendantAccIds(termAcc);
+        return descendantAccIds.size();
     }
 
     /**
@@ -310,11 +311,28 @@ public class OntologyDAO {
      * @throws Exception if something wrong happens in spring framework
      */
     public List<Term> getAllActiveTermDescendants(String termAcc) throws Exception {
-        return dao.getAllActiveTermDescendants(termAcc);
+        //return dao.getAllActiveTermDescendants(termAcc);
+        String sql = "select * from ont_terms where is_obsolete=0 and " +
+            "                term_acc in (" +
+            "                with recursive cte as (select child_term_acc   from ont_dag where parent_term_acc=?" +
+            "                union all select d.child_term_acc from cte c join ont_dag d on d.parent_term_acc=c.child_term_acc" +
+            "                " +
+            "                 )" +
+            "                 select child_term_acc from cte" +
+            "                )";
+        return dao.executeTermQuery(sql, termAcc);
     }
 
     public List<String> getAllActiveTermDescendantAccIds(String termAcc) throws Exception {
-        String sql = "SELECT DISTINCT child_term_acc FROM ont_dag START WITH parent_term_acc=? CONNECT BY PRIOR child_term_acc=parent_term_acc";
+        String sql = "select term_acc from ont_terms where is_obsolete=0 and " +
+                "                term_acc in (" +
+                "                with recursive cte as (select child_term_acc   from ont_dag where parent_term_acc=?" +
+                "                union all select d.child_term_acc from cte c join ont_dag d on d.parent_term_acc=c.child_term_acc" +
+                "                " +
+                "                 )" +
+                "                 select child_term_acc from cte" +
+                "                )";
+
         return StringListQuery.execute(dao, sql, termAcc);
     }
 
@@ -476,23 +494,30 @@ public class OntologyDAO {
 
         long time0 = System.currentTimeMillis();
         final AtomicLong[] stats = {new AtomicLong(time0), new AtomicLong(0)};
+
         accIds.parallelStream().forEach(accId -> {
+        //accIds.stream().forEach(accId -> {
+
             // test if the newly inserted DAG does not form loops
             try {
-                getDescendantCount(accId);
+                System.out.print("  "+accId);
+                int cnt = getDescendantCount(accId);
+                System.out.println("  "+cnt);
 
                 // every 10sec print out progress
                 long accIdsProcessed = stats[1].incrementAndGet();
                 long time2 = System.currentTimeMillis();
                 long time1 = stats[0].get();
-                if( time2- time1 > 15000 ) {
+                if( time2- time1 > 15000 || true ) {
                     stats[0].set(time2);
                     long percent = (100 * accIdsProcessed) / accIds.size();
                     System.out.println(accIdsProcessed + " ("+ percent+"%),  threads=" + Thread.activeCount());
                 }
+
             } catch(Exception e) {
                 System.out.println("WARNING: CYCLE found for "+accId);
             }
+
         });
         long accIdsProcessed = stats[1].get();
         System.out.println(accIdsProcessed + ". threads=" + Thread.activeCount());
